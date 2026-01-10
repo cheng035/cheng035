@@ -1,5 +1,3 @@
-# 🎮 Haohan Cheng | Level 99 Engineer
-
 > "Building high-throughput distributed systems & AI tools."
 
 ![Night Sky](https://capsule-render.vercel.app/api?type=waving&color=0f172a&height=220&section=header&text=Haohan%20Cheng&fontSize=70&fontColor=f8fafc&animation=fadeIn&fontAlignY=35&desc=Senior%20Software%20Engineer&descAlignY=65&descAlign=50)
@@ -9,14 +7,14 @@
 ```text
 +---------------------------------------------------------------+
 | Player: Haohan Cheng         Server: Singapore 🇸🇬             |
-| Class:  Senior Software Engineer (Distributed Systems)        |
+| Class:  Senior Software Engineer (Data server)        |
 | Level:  99                   Guild:  Shopee                   |
 +---------------------------------------------------------------+
 | HP:   [████████████████████] 100%                             |
 | MP:   [████████████████____] 90% (Fuel: Coffee ☕)            |
-| EXP:  [██████████████______] 500K+ QPS Handled                |
+| EXP:  [██████████████______]                                   |
 +---------------------------------------------------------------+
-| Weapon: Golang 🐹                                             |
+| Weapon: Golang jAVA                                           |
 | Skills: High Availability, System Design, AI Integration      |
 +---------------------------------------------------------------+
 ```
@@ -27,17 +25,15 @@
 *2021 – Present*
 
 *   **Mission: Event Ingestion System**
-    *   ⚔️ Architected distributed ingestion for **500K+ QPS**.
+    *   ⚔️ Architected distributed data collection system supporting millions of QPS
     *   🛡️ Scaled to geo-distributed architecture across multiple regions.
-    *   ⚡ Optimized throughput on 4-core instances.
 
 *   **Mission: Monitoring Platform**
-    *   👁️ Real-time tracking for **800+ internal users**.
-    *   🚀 Achieved sub-3s latency for 99% of 4 billion data points.
+    *   👁️ Real-time tracking using Elasticsearch and Clickhouse
 
 *   **Mission: AI Query Bot**
     *   🤖 Automated data retrieval using **LLMs (RAG)** & **Milvus**.
-    *   ⏳ Reduced query resolution time from **2h → 20m**.
+
 
 ## 🎒 INVENTORY (Tech Stack)
 
