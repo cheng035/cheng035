@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Haohan Cheng | Level 99 Engineer</title>
+    <meta name="description" content="Pixel Art Portfolio of Haohan Cheng, Senior Software Engineer." />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM (UMD - Global Scope) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      :root {
+        --panel-bg: rgba(30, 41, 59, 0.85); /* Slightly more transparent to see stars */
+        --border-color: #3b82f6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background-color: #020617; /* Very dark blue fallback */
+        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* Canvas Background Layer */
+      #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 0; /* Base layer */
+        pointer-events: none; /* Allow clicks to pass through to content */
+      }
+      
+      /* Main App Wrapper */
+      #root {
+        position: relative;
+        z-index: 1; /* Sits above canvas */
+      }
+
+      /* Fonts */
+      h1, h2, h3, .pixel-font {
+        font-family: 'Press Start 2P', cursive;
+        line-height: 1.5;
+        text-transform: uppercase;
+      }
+
+      /* Content Containers */
+      .pixel-box {
+        background-color: var(--panel-bg);
+        border: 4px solid var(--border-color);
+        box-shadow: 
+          -4px 0 0 0 #020617, 
+          4px 0 0 0 #020617, 
+          0 -4px 0 0 #020617, 
+          0 4px 0 0 #020617, 
+          0 0 0 4px var(--border-color);
+        margin: 4px;
+        position: relative;
+        backdrop-filter: blur(4px);
+      }
+
+      /* Interactive Elements */
+      .pixel-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 0.7rem;
+        padding: 12px 16px;
+        background-color: var(--border-color);
+        color: white;
+        border: 4px solid white;
+        border-right-color: #1d4ed8;
+        border-bottom-color: #1d4ed8;
+        border-left-color: #93c5fd;
+        border-top-color: #93c5fd;
+        cursor: pointer;
+        transition: transform 0.1s;
+        text-decoration: none;
+      }
+
+      .pixel-btn:hover { transform: scale(1.05); }
+      .pixel-btn:active { transform: scale(0.95); }
+
+      ::-webkit-scrollbar { width: 10px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body>
+    <!-- The Root Div where React mounts -->
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useRef, useEffect, useState } = React;
+
+      // --- PIXEL BACKGROUND COMPONENT ---
+      const PixelBackground = () => {
+        const canvasRef = useRef(null);
+
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+
+          const ctx = canvas.getContext('2d');
+          
+          let width = window.innerWidth;
+          let height = window.innerHeight;
+          
+          const resize = () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+          };
+          
+          window.addEventListener('resize', resize);
+          resize();
+
+          // --- ASSETS & CONFIG ---
+          const stars = [];
+          const numStars = 150;
+          
+          // Generate Stars
+          for(let i=0; i<numStars; i++) {
+            stars.push({
+              x: Math.random() * width,
+              y: Math.random() * height * 0.8, // Keep stars mostly in sky
+              size: Math.random() > 0.95 ? 3 : 1.5,
+              blinkSpeed: 0.01 + Math.random() * 0.03,
+              alpha: Math.random(),
+              direction: Math.random() > 0.5 ? 1 : -1
+            });
+          }
+
+          // Generate Trees
+          const trees = [];
+          const numTrees = Math.floor(width / 40) + 5; 
+          for(let i=0; i<numTrees; i++) {
+             const x = (i * 45) + (Math.random() * 20 - 10);
+             const h = 50 + Math.random() * 70; // Height
+             trees.push({ x, h });
+          }
+
+          // --- DRAWING FUNCTIONS ---
+
+          const drawSky = () => {
+             // Deep Night Gradient
+             const grad = ctx.createLinearGradient(0, 0, 0, height);
+             grad.addColorStop(0, '#020617');   // Almost black blue
+             grad.addColorStop(0.4, '#0f172a'); // Slate 900
+             grad.addColorStop(1, '#1e1b4b');    // Deep Indigo
+             ctx.fillStyle = grad;
+             ctx.fillRect(0,0, width, height);
+          };
+
+          const drawGalaxy = () => {
+             // Diagonal milky way band
+             ctx.save();
+             ctx.translate(width/2, height/2);
+             ctx.rotate(-Math.PI / 6); // Slanted
+             
+             // Galaxy Glow
+             const galaxyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, width);
+             galaxyGrad.addColorStop(0, 'rgba(139, 92, 246, 0.1)'); // Violet
+             galaxyGrad.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)'); // Blue
+             galaxyGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+             ctx.fillStyle = galaxyGrad;
+             ctx.fillRect(-width, -height/2, width*2, height);
+             
+             // Core Brightness
+             ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+             ctx.beginPath();
+             ctx.ellipse(0, 0, width * 0.6, height * 0.15, 0, 0, Math.PI * 2);
+             ctx.fill();
+             
+             ctx.restore();
+          };
+
+          const drawStars = () => {
+            stars.forEach(star => {
+              // Twinkle logic
+              star.alpha += star.blinkSpeed * star.direction;
+              if(star.alpha >= 1 || star.alpha <= 0.2) star.direction *= -1;
+              
+              ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+              ctx.fillRect(Math.floor(star.x), Math.floor(star.y), star.size, star.size);
+            });
+          };
+
+          const drawTree = (x, y, h) => {
+             ctx.fillStyle = '#0f172a'; // Silhouette color (Slate 900)
+             
+             // Trunk
+             ctx.fillRect(x - 3, y - h/3, 6, h/3);
+
+             // Pine Layers
+             const layers = 3;
+             const layerHeight = h / layers;
+             
+             for(let l=0; l<layers; l++) {
+                const currentY = y - (h/4) - (l * (layerHeight * 0.8));
+                const maxWidth = (layers - l + 1) * 15;
+                
+                // Draw Triangle (Pixelated)
+                ctx.beginPath();
+                ctx.moveTo(x, currentY - layerHeight);
+                ctx.lineTo(x - maxWidth, currentY + 10);
+                ctx.lineTo(x + maxWidth, currentY + 10);
+                ctx.fill();
+             }
+          };
+
+          const drawGround = () => {
+             // Ground hill
+             ctx.fillStyle = '#020617';
+             ctx.beginPath();
+             ctx.moveTo(0, height);
+             ctx.lineTo(0, height - 30);
+             // Gentle curve
+             for(let i=0; i<=width; i+=100) {
+                 ctx.lineTo(i, height - 30 + Math.sin(i/200)*10);
+             }
+             ctx.lineTo(width, height);
+             ctx.fill();
+
+             // Draw trees along the bottom
+             trees.forEach(t => {
+                drawTree(t.x, height - 20, t.h);
+             });
+          };
+
+          const drawDeer = (time) => {
+             // Position deer on the right side
+             const scale = 3;
+             const deerX = width * 0.85 > width - 100 ? width - 100 : width * 0.85; // Clamp so it doesn't go offscreen
+             const deerY = height - 50; 
+             
+             // Head bob animation
+             const bob = Math.sin(time / 800) * 1; 
+
+             ctx.fillStyle = '#f1f5f9'; // Slate 100 (Bright White/Grey)
+             
+             const d = scale;
+
+             // --- DRAW PIXEL DEER ---
+             
+             // Antlers (Left/Right)
+             ctx.fillRect(deerX - 1*d, deerY - (14+bob)*d, 1*d, 3*d);
+             ctx.fillRect(deerX + 1*d, deerY - (14+bob)*d, 1*d, 3*d);
+             // Antler tips
+             ctx.fillRect(deerX - 2*d, deerY - (15+bob)*d, 1*d, 1*d);
+             ctx.fillRect(deerX + 2*d, deerY - (15+bob)*d, 1*d, 1*d);
+
+             // Ears
+             ctx.fillRect(deerX - 3*d, deerY - (12+bob)*d, 1*d, 1*d);
+             ctx.fillRect(deerX + 3*d, deerY - (12+bob)*d, 1*d, 1*d);
+             
+             // Head
+             ctx.fillRect(deerX - 2*d, deerY - (12+bob)*d, 5*d, 3*d);
+             
+             // Neck
+             ctx.fillRect(deerX - 1*d, deerY - (9+bob)*d, 3*d, 4*d);
+
+             // Body
+             ctx.fillRect(deerX - 5*d, deerY - 6*d, 11*d, 4*d);
+             
+             // Tail
+             ctx.fillRect(deerX - 6*d, deerY - 6*d, 1*d, 2*d);
+
+             // Legs (Front L/R, Back L/R)
+             ctx.fillRect(deerX - 5*d, deerY - 2*d, 2*d, 5*d); // Back Left
+             ctx.fillRect(deerX - 3*d, deerY - 2*d, 2*d, 5*d); // Back Right
+             ctx.fillRect(deerX + 2*d, deerY - 2*d, 2*d, 5*d); // Front Left
+             ctx.fillRect(deerX + 4*d, deerY - 2*d, 2*d, 5*d); // Front Right
+             
+             // Glow
+             ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+             ctx.shadowBlur = 15;
+             ctx.fillRect(deerX - 1*d, deerY - (10+bob)*d, 3*d, 3*d); // Chest glow
+             ctx.shadowBlur = 0; // Reset
+          }
+
+          let animationFrameId;
+          const render = (time) => {
+             ctx.clearRect(0, 0, width, height); // Clear old frame
+             drawSky();
+             drawGalaxy();
+             drawStars();
+             drawGround();
+             drawDeer(time);
+             animationFrameId = requestAnimationFrame(render);
+          };
+          render(0);
+
+          return () => {
+             window.removeEventListener('resize', resize);
+             cancelAnimationFrame(animationFrameId);
+          };
+        }, []);
+
+        return <canvas id="bg-canvas" ref={canvasRef} />;
+      };
+
+      // --- DATA ---
+      const PERSONAL_INFO = {
+        name: "Haohan Cheng",
+        title: "Senior Software Engineer",
+        tagline: "Building high-throughput distributed systems & AI tools.",
+        about: "Senior Software Engineer specializing in Distributed Systems. I handle 500K+ QPS systems at Shopee and reduce query latencies by 80%+ via AI. Passionate about Go, Infrastructure, and bridging systems with AI agents.",
+        stats: { lvl: 99, class: "Architect" }
+      };
+
+      const CONTACT = {
+        phone: "+65 8020 9385",
+        email: "haohancheng@foxmail.com",
+        linkedin: "https://www.linkedin.com/in/haohanc2",
+        github: "https://github.com/cheng035",
+      };
+
+      const EXPERIENCE = [
+        {
+          company: "Shopee",
+          role: "Senior Software Engineer",
+          duration: "2021 – Present",
+          location: "Singapore",
+          projects: [
+            {
+              title: "Event Ingestion System",
+              techStack: ["Go", "Kafka", "Dist. Systems"],
+              points: [
+                "Architected distributed ingestion for 500K+ QPS.",
+                "Scaled to geo-distributed architecture.",
+                "Optimized throughput on 4-core instances."
+              ]
+            },
+            {
+              title: "Monitoring Platform",
+              techStack: ["ElasticSearch", "ClickHouse", "SpringBoot"],
+              points: [
+                "Real-time tracking for 800+ internal users.",
+                "Sub-3s latency for 99% of 4 billion points.",
+                "Designed critical metric APIs."
+              ]
+            },
+            {
+              title: "AI Query Bot",
+              techStack: ["ChatGPT", "RAG", "Milvus"],
+              points: [
+                "Automated data retrieval using LLMs.",
+                "Reduced resolution time: 2h -> 20m.",
+                "Implemented UI matching with Vector Search."
+              ]
+            }
+          ]
+        }
+      ];
+
+      const EDUCATION = [
+        {
+          school: "Univ. Illinois Urbana-Champaign",
+          degree: "M.S. Information Mgmt",
+          duration: "2019 - 2021",
+          gpa: "3.83/4.0"
+        },
+        {
+          school: "Beijing Univ. Posts & Telecom",
+          degree: "B.E. E-commerce",
+          duration: "2015 - 2019",
+          gpa: "3.5/4.0"
+        }
+      ];
+
+      const SKILLS = [
+        { category: "LANGUAGES", items: ["Go", "Java", "C++", "Python", "SQL"] },
+        { category: "SYSTEMS", items: ["Kafka", "Redis", "ClickHouse", "Elastic", "Nacos"] },
+        { category: "AI / ML", items: ["RAG", "LLMs", "CLIP", "Milvus", "Vectors"] },
+        { category: "CORE", items: ["Concurrency", "High Availability", "Profiling"] }
+      ];
+
+      // --- COMPONENTS ---
+
+      const PixelIcon = ({ type }) => {
+        if (type === 'github') return <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>;
+        if (type === 'linkedin') return <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>;
+        if (type === 'mail') return <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>;
+        return null;
+      }
+
+      const SectionHeader = ({ title }) => (
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-4 w-4 bg-blue-500 animate-pulse shadow-[0_0_10px_#3b82f6]"></div>
+          <h2 className="text-xl md:text-2xl text-blue-300 drop-shadow-md">{title}</h2>
+          <div className="flex-1 h-1 bg-blue-800"></div>
+        </div>
+      );
+
+      const Hero = () => {
+        return (
+          <div className="py-12 md:py-20 px-4">
+            <div className="max-w-4xl mx-auto pixel-box p-8 md:p-12 text-center">
+              <div className="inline-block mb-6 relative">
+                 <div className="w-24 h-24 mx-auto bg-blue-900 border-4 border-white flex items-center justify-center text-4xl shadow-lg">
+                   👨‍💻
+                 </div>
+                 <div className="absolute -bottom-2 -right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 border-2 border-white pixel-font shadow-sm">
+                   LVL {PERSONAL_INFO.stats.lvl}
+                 </div>
+              </div>
+              
+              <h1 className="text-2xl md:text-4xl text-white mb-4 drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">
+                {PERSONAL_INFO.name}
+              </h1>
+              <p className="text-lg text-blue-400 mb-6 pixel-font tracking-tight">
+                {PERSONAL_INFO.title}
+              </p>
+              
+              <div className="bg-slate-900/50 p-6 border-2 border-blue-900 mb-8 mx-auto max-w-2xl rounded">
+                <p className="text-base md:text-lg leading-relaxed text-blue-50">
+                  {PERSONAL_INFO.about}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-4">
+                <a href={`mailto:${CONTACT.email}`} className="pixel-btn shadow-lg">
+                  <PixelIcon type="mail" /> SEND MAIL
+                </a>
+                <a href={CONTACT.github} target="_blank" className="pixel-btn shadow-lg">
+                  <PixelIcon type="github" /> GITHUB
+                </a>
+                <a href={CONTACT.linkedin} target="_blank" className="pixel-btn shadow-lg">
+                  <PixelIcon type="linkedin" /> LINKEDIN
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const Experience = () => {
+        return (
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <SectionHeader title="QUEST LOG" />
+            <div className="space-y-8">
+              {EXPERIENCE.map((job, index) => (
+                <div key={index} className="pixel-box p-6 hover:bg-slate-800/80 transition-colors">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b-2 border-dashed border-blue-800 pb-4">
+                    <div>
+                      <h3 className="text-lg text-yellow-400 mb-1">{job.role}</h3>
+                      <div className="text-blue-300 pixel-font text-sm">{job.company}</div>
+                    </div>
+                    <div className="bg-blue-900/50 px-3 py-1 text-xs border-2 border-blue-700 mt-2 md:mt-0 pixel-font">
+                      {job.duration}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {job.projects.map((proj, i) => (
+                      <div key={i} className="bg-slate-900/40 p-5 rounded border-l-4 border-blue-600">
+                        <div className="flex flex-wrap justify-between items-center mb-3 gap-2">
+                          <strong className="text-white text-lg font-bold">{proj.title}</strong>
+                          <div className="flex flex-wrap gap-2">
+                            {proj.techStack.map(t => (
+                              <span key={t} className="text-xs text-blue-900 bg-blue-200 px-2 py-1 rounded font-bold pixel-font shadow-sm">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <ul className="list-none space-y-2.5">
+                          {proj.points.map((pt, j) => (
+                            <li key={j} className="flex items-start gap-3 text-slate-300 text-sm md:text-base">
+                              <span className="text-blue-500 mt-1.5 text-xs">►</span>
+                              <span>{pt}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      const Skills = () => {
+        return (
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <SectionHeader title="INVENTORY" />
+            <div className="grid md:grid-cols-2 gap-6">
+              {SKILLS.map((group, idx) => (
+                <div key={idx} className="pixel-box p-5">
+                  <h3 className="text-sm text-blue-200 mb-4 border-b-2 border-blue-800 pb-2 text-center">
+                    [{group.category}]
+                  </h3>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {group.items.map(item => (
+                      <div key={item} className="bg-slate-900 border border-blue-800 rounded px-3 py-1.5 text-blue-100 text-sm font-medium hover:border-yellow-400 transition-colors cursor-default shadow-sm">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      const Education = () => {
+        return (
+          <div className="max-w-4xl mx-auto px-4 py-8 pb-20">
+            <SectionHeader title="ACHIEVEMENTS" />
+            <div className="grid md:grid-cols-2 gap-6">
+              {EDUCATION.map((edu, idx) => (
+                <div key={idx} className="pixel-box p-6 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-base text-white mb-2 leading-tight font-bold">{edu.school}</h3>
+                    <div className="text-blue-400 text-xs mb-4 pixel-font">{edu.degree}</div>
+                  </div>
+                  <div className="flex justify-between items-end border-t border-blue-900 pt-4 mt-2">
+                    <span className="text-slate-400 text-sm">{edu.duration}</span>
+                    <span className="text-yellow-400 text-sm font-bold">GPA: {edu.gpa}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      const Footer = () => (
+        <footer className="bg-slate-900/80 border-t-4 border-blue-600 py-8 text-center mt-12 backdrop-blur-sm">
+           <p className="pixel-font text-blue-500 text-xs">PRESS START TO CONNECT</p>
+           <p className="text-slate-500 text-xs mt-3 font-sans">© {new Date().getFullYear()} Haohan Cheng</p>
+        </footer>
+      )
+
+      // --- APP ---
+      const App = () => {
+        return (
+          <div className="min-h-screen relative">
+            <PixelBackground />
+            <div className="relative z-10">
+              <Hero />
+              <Experience />
+              <Skills />
+              <Education />
+              <Footer />
+            </div>
+          </div>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
